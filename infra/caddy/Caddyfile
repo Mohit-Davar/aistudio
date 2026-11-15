@@ -1,0 +1,45 @@
+# DOMAIN=localhost uses self-signed cert; real domain triggers automatic Let's Encrypt
+{$DOMAIN:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options    "nosniff"
+		X-Frame-Options           "DENY"
+		Referrer-Policy           "strict-origin-when-cross-origin"
+		Permissions-Policy        "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+
+	@api path /api/* /.well-known/oauth-authorization-server* /.well-known/openid-configuration*
+	handle @api {
+		reverse_proxy api:3000 {
+			# overwrite rather than append so clients cannot spoof their IP
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Real-IP       {remote_host}
+
+			transport http {
+				dial_timeout            5s
+				response_header_timeout 30s
+			}
+		}
+	}
+
+	@scanners path /wp-admin* /wp-login* /wp-content* /xmlrpc.php /phpmyadmin* /.env /.git*
+	respond @scanners 404
+
+	handle {
+		root * /srv
+
+		# bun inlines content hashes into filenames
+		@hashed path_regexp \.(js|css|png|jpg|svg|woff2?)$
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+		# html entry point must always revalidate
+		@html path / /index.html
+		header @html Cache-Control "no-cache"
+
+		try_files {path} /index.html
+		file_server
+	}
+}

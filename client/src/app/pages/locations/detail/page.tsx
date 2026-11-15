@@ -1,0 +1,82 @@
+import { useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { PageContainer } from '@/app/shared/components/layout/page-container';
+import { PageHeader } from '@/app/shared/components/layout/page-header';
+import { ErrorState } from '@/app/shared/components/states/error-state';
+import { Button } from '@/app/shared/components/ui/button';
+import { Skeleton } from '@/app/shared/components/ui/skeleton';
+
+import { useOrganisationContext } from '@/app/pages/(organisation)/context';
+import { DashboardWorkspace } from '@/app/pages/dashboards/shared/components/dashboard-workspace';
+import { LocationDetails } from '@/app/pages/locations/detail/components/location-details';
+import { LocationDialogs } from '@/app/pages/locations/shared/components/location-dialogs';
+import { useFetchLocation, useFetchLocations } from '@/app/pages/locations/shared/hooks/use-location-queries';
+
+export function LocationDetailPage() {
+  const { organisation } = useOrganisationContext();
+
+  const navigate = useNavigate();
+
+  const { locationId } = useParams();
+
+  const { data: locations = [], isPending: isLocationsPending } = useFetchLocations(organisation.id);
+
+  const detailQuery = useFetchLocation(organisation.id, locationId);
+
+  const locationsById = useMemo(() => new Map(locations.map((loc) => [loc.id, loc])), [locations]);
+
+  if (detailQuery.isPending || isLocationsPending) {
+    return (
+      <PageContainer>
+        <PageHeader title="Location" back={{ to: '/locations', label: 'Locations' }} />
+        <div className="bg-card space-y-6 rounded-lg border p-6">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+          <div className="pt-4">
+            <Skeleton className="h-36 w-full" />
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (detailQuery.isError || !detailQuery.data) {
+    return (
+      <PageContainer>
+        <PageHeader title="Location" back={{ to: '/locations', label: 'Locations' }} />
+        <div className="bg-card flex min-h-60 items-center justify-center rounded-lg border p-8">
+          <ErrorState
+            title="Location not found"
+            message="We couldn't find this location. It may have been deleted or moved."
+            variant="inline"
+            onRetry={() => void detailQuery.refetch()}
+            action={
+              <Button variant="outline" size="sm" onClick={() => void navigate('/locations')}>
+                Back to all locations
+              </Button>
+            }
+          />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <LocationDetails location={detailQuery.data} locationsById={locationsById} />
+      <DashboardWorkspace
+        target={{ scope: 'location', locationId: detailQuery.data.id }}
+        variant="section"
+        title="Telemetry"
+      />
+      <LocationDialogs />
+    </PageContainer>
+  );
+}

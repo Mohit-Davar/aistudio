@@ -1,0 +1,20 @@
+{
+  "name": "@vizibble/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./*.ts"
+  },
+  "scripts": {
+    "format": "bunx prettier . --write"
+  },
+  "devDependencies": {
+    "prettier": "catalog:",
+    "prettier-plugin-organize-imports": "^4.3.0"
+  },
+  "dependencies": {
+    "better-auth": "catalog:",
+    "zod": "catalog:"
+  }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "metric_definitions" DROP COLUMN "category";

@@ -1,0 +1,7 @@
+{
+  "name": "@vizibble/infra",
+  "private": true,
+  "scripts": {
+    "format": "bunx prettier . --write"
+  }
+}

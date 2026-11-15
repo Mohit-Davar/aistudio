@@ -1,0 +1,40 @@
+# Version control
+.git
+
+# Dependencies — reinstalled inside the container
+**/node_modules
+
+# Build outputs — rebuilt inside the container
+**/dist
+**/*.map
+
+# Secrets — never bake into images
+**/.env
+**/.env.*
+!**/.env.example
+
+# Vera — only its package.json is needed for workspace lockfile resolution
+Vera/**
+!Vera/package.json
+
+# IDE, editors, agents
+.vscode/
+.idea/
+**/.agents/
+
+# Documentation — not needed at runtime
+**/*.md
+
+# Linting and formatting config — not needed at runtime
+**/.prettierrc
+**/eslint.config.*
+**/components.json
+**/skills-lock.json
+
+# Infra meta (compose file is not part of the app images)
+infra/.env
+infra/docker-compose.yml
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
